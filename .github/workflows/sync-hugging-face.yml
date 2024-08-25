@@ -1,0 +1,33 @@
+name: Update Index Release
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 每 5 分钟运行一次
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Fetch from huggingface
+      run: |
+        python sync-model.py
+
+    - name: Set up GitHub CLI
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install GitHub CLI
+      run: |
+        npm install -g gh
+
+    - name: Login to GitHub CLI
+      run: |
+        gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+
+    - name: update the release index.json
+      run: |
+        gh release upload $TAG_NAME index.json --clobber
